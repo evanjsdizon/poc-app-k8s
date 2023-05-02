@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-gateway
+spec:
+  selector:
+    matchLabels:
+      app: cart-gateway
+  template:
+    metadata:
+      labels:
+        app: cart-gateway
+    spec:
+      containers:
+      - name: cart-gateway
+        image: fakeacc01/poc-cart-gateway-service:1.0.1
+        env:
+        - name: app.grpc-host
+          value: cart-svc
+        - name: app.grpc-port
+          value: "8030"
+        livenessProbe:
+          httpGet:
+            path: "/actuator/health/liveness"
+            port: live-port
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: "/actuator/health/readiness"
+            port: live-port
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8050
+          name: live-port

@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logger
+spec:
+  selector:
+    matchLabels:
+      app: logger
+  template:
+    metadata:
+      labels:
+        app: logger
+    spec:
+      containers:
+      - name: logger
+        image: fakeacc01/poc-logger-service:1.0.0
+        env:
+        - name: app.kafka.host
+          value: kafka-svc
+        - name: amazon.aws.accesskey
+          value: ${ACCESS_KEY}
+        - name: amazon.aws.secretkey
+          value: ${SECRET_KEY}
+        livenessProbe:
+          httpGet:
+            path: "/actuator/health/liveness"
+            port: live-port
+          initialDelaySeconds: 50
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: "/actuator/health/readiness"
+            port: live-port
+          initialDelaySeconds: 50
+          periodSeconds: 10
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8020
+          name: live-port

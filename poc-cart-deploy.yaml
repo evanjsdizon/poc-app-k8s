@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+spec:
+  selector:
+    matchLabels:
+      app: cart
+  template:
+    metadata:
+      labels:
+        app: cart
+    spec:
+      containers:
+      - name: cart
+        image: fakeacc01/poc-cart-service:1.0.1
+        env:
+        - name: spring.datasource.url
+          value: jdbc:mysql://host.docker.internal:3306/poc
+        - name: spring.datasource.username
+          value: ${USERNAME}
+        - name: spring.datasource.password
+          value: ${PASSWORD}
+        livenessProbe:
+          httpGet:
+            path: "/actuator/health/liveness"
+            port: live-port
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: "/actuator/health/liveness"
+            port: live-port
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8040
+          name: live-port
+        - containerPort: 8030
+          name: grpc-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-svc
+spec:
+  selector:
+    app: cart
+  ports:
+  - port: 8030
+    targetPort: grpc-port
+    protocol: TCP

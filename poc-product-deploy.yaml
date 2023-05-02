@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product
+spec:
+  selector:
+    matchLabels:
+      app: product
+  template:
+    metadata:
+      labels:
+        app: product
+    spec:
+      containers:
+      - name: product
+        image: fakeacc01/poc-product-service:1.0.0
+        env:
+        - name: app.kafka.host
+          value: kafka-svc
+        - name: spring.datasource.url
+          value: jdbc:mysql://host.docker.internal:3306/poc
+        - name: spring.datasource.username
+          value: ${USERNAME}
+        - name: spring.datasource.password
+          value: ${PASSWORD}
+        livenessProbe:
+          httpGet:
+            path: "/actuator/health/liveness"
+            port: live-port
+          initialDelaySeconds: 100
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: "/actuator/health/readiness"
+            port: live-port
+          initialDelaySeconds: 100
+          periodSeconds: 10
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8010
+          name: live-port
